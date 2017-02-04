@@ -70,7 +70,7 @@ def find_centers( data, k, classes = None):
             temp = data[ids, :]      
             
             # Add rows (data points) for class i & divide by class size i
-            temp = np.matrix(np.asarray([ sum(temp[:, j]) for j in xrange(d) ]))
+            temp = np.matrix(np.asarray([ float(sum(temp[:, j])) for j in xrange(d) ]))
             temp /= np.size(ids)
             centers[i] = temp                   # Store class data in centers[i]
             del temp, ids
@@ -177,6 +177,7 @@ def kmeans( k, data ):
         classes[:, 0] = np.nanargmin(D, axis = 1)       # Class assignments
         classes[:, 1] = np.nanmin(D, axis = 1)          # Distances to paired centers
 
+        # Guard against empty clusters
         while np.unique(np.asarray(classes[:, 0])).size < k:
             # If a cluster becomes empty, replace that center with a
             # small random perturbation of the center of the largest cluster.
@@ -201,7 +202,6 @@ def kmeans( k, data ):
     (values, counts) = np.unique(np.asarray(classes[:, 0]), return_counts = True)
     class_sizes = np.matrix(np.zeros(k))
     class_sizes = counts
-    print 'Centers', centers
     return centers, classes, class_sizes, error, counter
 
 
@@ -209,7 +209,7 @@ def test_k( file_path, lim ):
     '''
     ===== DESCRIPTION =================================
     Main test function for implementing the k-means
-    algorithm for varying k = 1, ... , N/2.
+    algorithm for varying k = 1, ... , lim.
     
     ===== INPUT =======================================
     file_path - (String) Path to file with (N+1) lines:
@@ -226,8 +226,7 @@ def test_k( file_path, lim ):
     
     data = convert_file( file_path )
     N, d = data.shape
-    # lim = int(N / 2)
-    
+
     # Initialize error trackers for given k value (7 trials each)
     error_compare = np.matrix(np.zeros((lim, 7)))
     min_errors = np.matrix(np.zeros((lim, 1)))           # Best error per k (across 7 trials)
@@ -254,14 +253,18 @@ def test_k( file_path, lim ):
     best_error = np.nanmin(min_errors)
     return min_errors, error_compare, best_k, best_error, centers_k
     
+    
 def main(argv):
     inputfile = ''
     k_max = 0
+    
     try:
         opts, args = getopt.getopt(argv, "hi:k:")
+        
     except getopt.GetoptError:
         print 'kmeans.py -i <inputfile> -k <max k>'
         sys.exit(2)
+        
     for opt, arg in opts:
         if opt == '-h':
             print 'kmeans.py -i <inputfile> -k <max k>'
@@ -274,5 +277,7 @@ def main(argv):
     test_k(inputfile, k_max)
     return
 
+
 if __name__ == "__main__":
    main(sys.argv[1:])
+
